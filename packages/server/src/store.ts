@@ -12,6 +12,7 @@ export interface Comment {
 
 export interface Thread {
   id: string;
+  host: string;
   project: string;
   branch: string;
   author: string;
@@ -23,6 +24,7 @@ export interface Thread {
 
 interface ThreadRow {
   id: string;
+  host: string;
   project: string;
   branch: string;
   author: string;
@@ -49,6 +51,7 @@ export class Store {
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS threads (
         id TEXT PRIMARY KEY,
+        host TEXT NOT NULL DEFAULT '',
         project TEXT NOT NULL,
         branch TEXT NOT NULL,
         author TEXT NOT NULL,
@@ -57,7 +60,6 @@ export class Store {
         resolved INTEGER NOT NULL DEFAULT 0,
         created_at TEXT NOT NULL
       );
-      CREATE INDEX IF NOT EXISTS threads_scope ON threads (project, branch, route);
       CREATE TABLE IF NOT EXISTS comments (
         id TEXT PRIMARY KEY,
         thread_id TEXT NOT NULL REFERENCES threads(id) ON DELETE CASCADE,
@@ -67,17 +69,22 @@ export class Store {
       );
       CREATE INDEX IF NOT EXISTS comments_thread ON comments (thread_id, created_at);
     `);
+    // Databases created before threads were scoped by host lack the column; their rows keep host ''.
+    const columns = this.db.prepare('PRAGMA table_info(threads)').all() as unknown as { name: string }[];
+    if (!columns.some((c) => c.name === 'host')) this.db.exec("ALTER TABLE threads ADD COLUMN host TEXT NOT NULL DEFAULT ''");
+    this.db.exec('DROP INDEX IF EXISTS threads_scope');
+    this.db.exec('CREATE INDEX IF NOT EXISTS threads_host_scope ON threads (host, project, branch, route)');
     this.db.exec('PRAGMA foreign_keys = ON');
   }
 
-  list(project: string, branch: string, route?: string): Thread[] {
+  list(host: string, project: string, branch: string, route?: string): Thread[] {
     const rows = route
       ? this.db
-          .prepare('SELECT * FROM threads WHERE project = ? AND branch = ? AND route = ? ORDER BY created_at LIMIT ?')
-          .all(project, branch, route, LIST_LIMIT)
+          .prepare('SELECT * FROM threads WHERE host = ? AND project = ? AND branch = ? AND route = ? ORDER BY created_at LIMIT ?')
+          .all(host, project, branch, route, LIST_LIMIT)
       : this.db
-          .prepare('SELECT * FROM threads WHERE project = ? AND branch = ? ORDER BY created_at LIMIT ?')
-          .all(project, branch, LIST_LIMIT);
+          .prepare('SELECT * FROM threads WHERE host = ? AND project = ? AND branch = ? ORDER BY created_at LIMIT ?')
+          .all(host, project, branch, LIST_LIMIT);
     return (rows as unknown as ThreadRow[]).map((row) => this.hydrate(row));
   }
 
@@ -90,8 +97,8 @@ export class Store {
     const id = randomUUID();
     const now = new Date().toISOString();
     this.db
-      .prepare('INSERT INTO threads (id, project, branch, author, anchor, route, resolved, created_at) VALUES (?, ?, ?, ?, ?, ?, 0, ?)')
-      .run(id, input.project, input.branch, input.author, JSON.stringify(input.anchor), input.anchor.route, now);
+      .prepare('INSERT INTO threads (id, host, project, branch, author, anchor, route, resolved, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?)')
+      .run(id, input.host, input.project, input.branch, input.author, JSON.stringify(input.anchor), input.anchor.route, now);
     this.insertComment(id, { author: input.author, body: input.body }, now);
     return this.get(id)!;
   }
@@ -124,6 +131,7 @@ export class Store {
     ).map((c) => ({ id: c.id, threadId: c.thread_id, author: c.author, body: c.body, createdAt: c.created_at }));
     return {
       id: row.id,
+      host: row.host,
       project: row.project,
       branch: row.branch,
       author: row.author,

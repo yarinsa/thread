@@ -17,8 +17,8 @@ export function createApp({ store, notify }: AppOptions) {
   app.get('/threads', (c) => {
     const query = listQuerySchema.safeParse(c.req.query());
     if (!query.success) return c.json({ error: query.error.issues }, 400);
-    const { project, branch, route } = query.data;
-    return c.json(store.list(project, branch, route));
+    const { host, project, branch, route } = query.data;
+    return c.json(store.list(host, project, branch, route));
   });
 
   app.post('/threads', async (c) => {

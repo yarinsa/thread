@@ -15,6 +15,7 @@ export interface Comment {
 
 export interface Thread {
   id: string;
+  host: string;
   project: string;
   branch: string;
   author: string;

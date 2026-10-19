@@ -3,7 +3,7 @@ import { createApp } from './app.ts';
 import { Store } from './store.ts';
 
 const anchor = { selector: '[data-testid="save"]', route: '/settings', offsetX: 0.5, offsetY: 0.5 };
-const threadInput = { project: 'portal', branch: 'feat-x', author: 'yarin', body: 'Button label is off', anchor };
+const threadInput = { host: 'preview.example.com', project: 'portal', branch: 'feat-x', author: 'yarin', body: 'Button label is off', anchor };
 
 function setup() {
   const app = createApp({ store: new Store() });
@@ -19,7 +19,7 @@ describe('threads', () => {
     expect(created.comments).toHaveLength(1);
     expect(created.resolved).toBe(false);
 
-    const list = await (await json('GET', '/threads?project=portal&branch=feat-x&route=/settings')).json();
+    const list = await (await json('GET', '/threads?host=preview.example.com&project=portal&branch=feat-x&route=/settings')).json();
     expect(list.map((t: { id: string }) => t.id)).toEqual([created.id]);
   });
 
@@ -27,10 +27,18 @@ describe('threads', () => {
     const { json } = setup();
     await json('POST', '/threads', threadInput);
     await json('POST', '/threads', { ...threadInput, branch: 'main' });
-    const list = await (await json('GET', '/threads?project=portal&branch=main')).json();
+    const list = await (await json('GET', '/threads?host=preview.example.com&project=portal&branch=main')).json();
     expect(list).toHaveLength(1);
-    const other = await (await json('GET', '/threads?project=other&branch=main')).json();
+    const other = await (await json('GET', '/threads?host=preview.example.com&project=other&branch=main')).json();
     expect(other).toHaveLength(0);
+  });
+
+  it('scopes listing by host', async () => {
+    const { json } = setup();
+    await json('POST', '/threads', threadInput);
+    await json('POST', '/threads', { ...threadInput, host: 'localhost:3000' });
+    const list = await (await json('GET', '/threads?host=localhost:3000&project=portal&branch=feat-x')).json();
+    expect(list.map((t: { host: string }) => t.host)).toEqual(['localhost:3000']);
   });
 
   it('rejects invalid payloads', async () => {

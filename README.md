@@ -1,6 +1,6 @@
 # review-overlay
 
-Self-hosted look-alike of the Vercel Toolbar comments feature. A single injected script lets reviewers pin threaded comments to any element on a page; a tiny API stores them per project, branch and route.
+Self-hosted look-alike of the Vercel Toolbar comments feature. A single injected script lets reviewers pin threaded comments to any element on a page; a tiny API stores them per host, project, branch and route.
 
 ## Packages
 
@@ -28,6 +28,7 @@ Serve `packages/overlay/dist/overlay.js` from anywhere and add to the host page:
 ```
 
 - `data-branch` groups threads per environment. Pass the git branch at build time.
+- Threads are also scoped by the page's host (`window.location.host`, including the port), so the same project and branch on `localhost:3000` and on a preview domain keep separate threads.
 - `data-author` is optional; without it the overlay prompts once and remembers the name in localStorage.
 - Threads are pinned by a CSS selector that prefers `data-testid`, then `id`, then a structural path. Pins whose element is gone show in orange at the top right.
 - `?rc=<threadId>` in the URL opens that thread on load. "Copy link" produces it.

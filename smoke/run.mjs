@@ -19,6 +19,6 @@ await page.waitForFunction(() => document.querySelector('[data-review-overlay]')
 await page.reload();
 await host.locator('button', { hasText: 'Show resolved' }).click();
 const pins = await host.locator('.pin').count();
-const threads = await (await fetch('http://localhost:4747/threads?project=smoke&branch=main&route=/')).json();
+const threads = await (await fetch('http://localhost:4747/threads?host=localhost:4848&project=smoke&branch=main&route=/')).json();
 console.log(JSON.stringify({ pins, threads: threads.length, comments: threads[0]?.comments.length, resolved: threads[0]?.resolved, selector: threads[0]?.anchor.selector }));
 await browser.close();

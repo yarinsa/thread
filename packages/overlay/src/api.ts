@@ -14,7 +14,7 @@ export class ApiClient {
 
   listThreads(route: string): Promise<Thread[]> {
     const { project, branch } = this.config;
-    const query = new URLSearchParams({ project, branch, route });
+    const query = new URLSearchParams({ host: window.location.host, project, branch, route });
     return this.request(`/threads?${query}`);
   }
 
@@ -24,7 +24,7 @@ export class ApiClient {
 
   createThread(anchor: Anchor, body: string): Promise<Thread> {
     const { project, branch, author } = this.config;
-    return this.request('/threads', { method: 'POST', body: JSON.stringify({ project, branch, author, body, anchor }) });
+    return this.request('/threads', { method: 'POST', body: JSON.stringify({ host: window.location.host, project, branch, author, body, anchor }) });
   }
 
   addComment(threadId: string, body: string): Promise<Comment> {

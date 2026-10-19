@@ -8,6 +8,7 @@ export const anchorSchema = z.object({
 });
 
 export const createThreadSchema = z.object({
+  host: z.string().min(1).max(255),
   project: z.string().min(1).max(200),
   branch: z.string().min(1).max(200),
   author: z.string().min(1).max(200),
@@ -25,6 +26,7 @@ export const updateThreadSchema = z.object({
 });
 
 export const listQuerySchema = z.object({
+  host: z.string().min(1),
   project: z.string().min(1),
   branch: z.string().min(1),
   route: z.string().optional()
