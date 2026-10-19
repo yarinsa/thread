@@ -1,0 +1,16 @@
+{
+  "name": "review-overlay",
+  "private": true,
+  "packageManager": "pnpm@10.34.1",
+  "scripts": {
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck",
+    "dev:server": "pnpm --filter @review-overlay/server dev",
+    "dev:overlay": "pnpm --filter @review-overlay/overlay dev"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "vitest": "3.2.4"
+  }
+}

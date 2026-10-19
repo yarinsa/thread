@@ -1,0 +1,11 @@
+node_modules
+dist
+*.db
+*.db-*
+.env
+smoke/node_modules
+smoke/*.log
+smoke/overlay.js
+smoke/*.png
+smoke/package.json
+smoke/pnpm-lock.yaml
